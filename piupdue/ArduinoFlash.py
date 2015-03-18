@@ -1,8 +1,9 @@
 """ Handles all incoming messages from the Master Controller Arduino serial port."""
 import ArduinoFlashXmodem, Logger, ArduinoFlashSerial, ArduinoFlashEefc, ArduinoFlashHardValues
-import time, serial
+import time, serial, os
 import traceback
 import ctypes
+import argparse
 
 ser = 0
     
@@ -185,16 +186,51 @@ def ArduinoFlashLoad(SketchFile, IsNativePort):
 
     log.Log("Flash Loaded.")
 	
+def Checks(Port, SketchFile):
+    """ Does basic checks that sketch file exists and port is connected."""
+    if not os.path.isfile(SketchFile):
+        raise Exception("Sketch File Does Not Exist: " + SketchFile)
+    
+    try:
+        ser = serial.Serial(port=ArduinoFlashHardValues.arduinoPort,\
+            baudrate=1200,\
+            parity=serial.PARITY_NONE,\
+            stopbits=serial.STOPBITS_ONE,\
+            bytesize=serial.EIGHTBITS,\
+            timeout=2000)
+    except Exception:
+        raise Exception("Error with Serial Port. " + traceback.format_exc())
+    
+
 def Test(Msg):
 	print "This would be the file: " + Msg
 
 if __name__ == "__main__":
     """ Main entry for program. """
-    log = Logger.Logger(ArduinoFlashHardValues.logFile, True)                                           # Saves outputs in the log file.
+    
+    parser = argparse.ArgumentParser(description='Upload Arduino Sketch to Arduino Due via Pi.')
+    
+    parser.add_argument("-f", "--file", dest="sketchFile", required=True, help="Sketch file to upload. Including path.")
+    parser.add_argument("-p", "--port", dest="port", required=True, help="Port Due is connected on.")
+    parser.add_argument("-l", "--log", dest="logFile", default=False, help="Save output to log file.")
+    
+    args = parser.parse_args()
+    
+    sketchFile = args.sketchFile
+    port = args.port
+    logFile = args.logFile
+    
+    if not logFile:
+        print "FILE: " + sketchFile + ", PORT: " + port + ", No Log File"
+        log = Logger.Logger(False)                                                              # Doesn't save to Log, just prints.
+    else:
+        print "FILE: " + sketchFile + ", PORT: " + port + ", Log|: " + logFile
+        log = Logger.Logger(True, logFile, True)                                                # Saves to Log file.
     
     log.Log("Starting ArduinoFlashLog.py")
         
     try:
+        Checks(port, sketchFile)
         ArduinoFlashLoad(ArduinoFlashHardValues.sketchFile, ArduinoFlashHardValues.isNativePort)
         log.Log("Exiting ArduinoFlashLog.py")
     except Exception, e:
