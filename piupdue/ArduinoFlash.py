@@ -7,7 +7,7 @@ import argparse
 
 ser = 0
     
-def SetSamBA():
+def SetSamBA(DueSerialPort):
     """ 
     Initial triggering of chip into SAM-BA mode. 
     On the Programming Port there is an ATMEGA16U2 chip, acting as a USB bridge to expose the SAM UART as USB. 
@@ -16,7 +16,7 @@ def SetSamBA():
     """
     log.Log("Setting into SAM-BA...")
     
-    ser = serial.Serial(port=ArduinoFlashHardValues.arduinoPort,\
+    ser = serial.Serial(port=DueSerialPort,\
                         baudrate=1200,\
                         parity=serial.PARITY_NONE,\
                         stopbits=serial.STOPBITS_ONE,\
@@ -91,14 +91,14 @@ def ConnectSamBA():
         log.Log("Unsupported processor")
         return False
     
-def ConnectSamBANative():
+def ConnectSamBANative(DueSerialPort):
     """
     Connects to a processor that has been set into SAM-BA bootloader mode. (115200 Baud)
     Does some initialisation then checks Chip ID confirming correct processor.
     """  
     log.Log("ConnectSamBA()...")
     
-    ser = serial.Serial(port=ArduinoFlashHardValues.arduinoPort,\
+    ser = serial.Serial(port=DueSerialPort,\
                         baudrate=921600,\
                         parity=serial.PARITY_NONE,\
                         stopbits=serial.STOPBITS_ONE,\
@@ -147,7 +147,7 @@ def ConnectSamBANative():
         log.Log("Unsupported processor")
         return False
 
-def ArduinoFlashLoad(SketchFile, IsNativePort):
+def ArduinoFlashLoad(SketchFile, DueSerialPort, IsNativePort):
     """
     Loads a new sketch to Arduino Due.
     Sets into SAM-BA mode.
@@ -159,9 +159,9 @@ def ArduinoFlashLoad(SketchFile, IsNativePort):
     
     log.Log("ArduinoFlashLoad()...")
     
-    SetSamBA()                                                                                          # Sets processor into SAM-BA mode.
+    SetSamBA(DueSerialPort)                                                                                          # Sets processor into SAM-BA mode.
     
-    serialPort = ConnectSamBANative()                                                                         # Connects to SAM-BA mode and confirms correct processor.
+    serialPort = ConnectSamBANative(DueSerialPort)                                                                         # Connects to SAM-BA mode and confirms correct processor.
     if not serialPort:
         return
     
@@ -192,7 +192,7 @@ def Checks(Port, SketchFile):
         raise Exception("Sketch File Does Not Exist: " + SketchFile)
     
     try:
-        ser = serial.Serial(port=ArduinoFlashHardValues.arduinoPort,\
+        ser = serial.Serial(port=Port,\
             baudrate=1200,\
             parity=serial.PARITY_NONE,\
             stopbits=serial.STOPBITS_ONE,\
@@ -202,8 +202,20 @@ def Checks(Port, SketchFile):
         raise Exception("Error with Serial Port. " + traceback.format_exc())
     
 
-def Test(Msg):
-	print "This would be the file: " + Msg
+def Test(sketchFile, port, logFile=False):    
+    try:
+        if not logFile:
+            log = Logger.Logger(False)                                                              # Doesn't save to Log, just prints.
+        else:
+            log = Logger.Logger(True, logFile, True)                                                # Saves to Log file.
+        
+        log.Log("Starting ArduinoFlashLog.py")
+        Checks(port, sketchFile)
+        #ArduinoFlashLoad(sketchFile, port, ArduinoFlashHardValues.isNativePort)
+        log.Log("Exiting ArduinoFlashLog.py")
+    except Exception, e:
+        log.Log("Main Exception:")
+        log.Log(traceback.format_exc())
 
 if __name__ == "__main__":
     """ Main entry for program. """
@@ -220,19 +232,8 @@ if __name__ == "__main__":
     port = args.port
     logFile = args.logFile
     
-    if not logFile:
-        print "FILE: " + sketchFile + ", PORT: " + port + ", No Log File"
-        log = Logger.Logger(False)                                                              # Doesn't save to Log, just prints.
-    else:
-        print "FILE: " + sketchFile + ", PORT: " + port + ", Log|: " + logFile
-        log = Logger.Logger(True, logFile, True)                                                # Saves to Log file.
-    
-    log.Log("Starting ArduinoFlashLog.py")
-        
     try:
-        Checks(port, sketchFile)
-        ArduinoFlashLoad(ArduinoFlashHardValues.sketchFile, ArduinoFlashHardValues.isNativePort)
-        log.Log("Exiting ArduinoFlashLog.py")
+        Test(sketchFile, port, logFile)
     except Exception, e:
-        log.Log("Main Exception:")
-        log.Log(traceback.format_exc())
+        print "Main Exception:"
+        print traceback.format_exc()
