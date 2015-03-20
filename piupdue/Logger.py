@@ -27,7 +27,6 @@ class Logger:
             print Message     
             
         if self.saveToLog:
-            print "Saving..."
             if not os.path.isfile(self.filePath):
                 raise Exception(self.filePath + " Log File Broken!!")
               

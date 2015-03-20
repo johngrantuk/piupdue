@@ -1,1 +1,1 @@
-from ArduinoFlash import Test
+from ArduinoFlash import Test, GetConnectedDeviceList
