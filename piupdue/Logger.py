@@ -6,13 +6,15 @@ class Logger:
     saveToLog = False
     display = True
     my_logger = False
+    sockJs = False
     
-    def __init__(self, SaveToLog, FilePath="\piupdue.log", Display=True):
+    def __init__(self, SaveToLog, FilePath="\piupdue.log", Display=True, SockJs=False):
         
         if SaveToLog:
             self.saveToLog = SaveToLog
             self.filePath = FilePath
             self.display = Display
+            self.sockJs = SockJs
             self.my_logger = logging.getLogger('ArduinoFlashLogger')
             self.my_logger.setLevel(logging.DEBUG)
            
@@ -23,6 +25,9 @@ class Logger:
         """ Saves message and timestamp to logfile."""
         Message = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S:%f')[:-3] + ", " + Message
 
+        if self.sockJs:
+            self.sockJs.broadcast(self.sockJs._connected, Message)
+            
         if self.display:
             print Message     
             

@@ -37,9 +37,6 @@ def GetPortInfo(Port, PortList):
     p = subprocess.Popen(["sudo udevadm info --query=property -p " + output], stdout=subprocess.PIPE, shell=True)
     (output, err) = p.communicate()
     
-    log.Log("JOHNS")
-    log.Log(output)
-    
     infoStrs = output.split('\n')
     
     for info in infoStrs:
@@ -259,14 +256,14 @@ def Checks(Port, SketchFile):
         raise Exception("Error with Serial Port. " + traceback.format_exc())
     """
 
-def Test(sketchFile, port, logFile=False):    
+def Test(sketchFile, port, logFile=False, sockJs=False):    
     try:  
         global log
               
         if not logFile:
             log = Logger.Logger(False)                                                              # Doesn't save to Log, just prints.
         else:
-            log = Logger.Logger(True, logFile, True)                                                # Saves to Log file.
+            log = Logger.Logger(True, logFile, True, sockJs)                                                # Saves to Log file.
         
         log.Log("Starting ArduinoFlashLog.py")
         log.Log(sketchFile)
