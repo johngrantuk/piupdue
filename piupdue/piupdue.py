@@ -301,7 +301,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='Upload Arduino Sketch to Arduino Due via Pi.')
     
-    parser.add_argument("-f", "--file", dest="sketchFile", required=True, help="Sketch file to upload. Including path.")
+    parser.add_argument("-f", "--file", dest="sketchFile", required=True, help="Sketch file to upload. Including path. (/path/File.cpp.bin)")
     parser.add_argument("-p", "--port", dest="port", default=False, help="Port Due is connected on. Leave blank for auto selection.")
     parser.add_argument("-l", "--log", dest="logFile", default=False, help="Save output to log file.")
     
