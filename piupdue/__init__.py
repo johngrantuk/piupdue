@@ -1,1 +1,1 @@
-from ArduinoFlash import Test, GetConnectedDeviceList
+from piupdue import Upload, GetConnectedDeviceList

@@ -1,6 +1,6 @@
-""" Handles all incoming messages from the Master Controller Arduino serial port."""
+""" Main program functions."""
 import ArduinoFlashXmodem, Logger, ArduinoFlashSerial, ArduinoFlashEefc, ArduinoFlashHardValues
-import time, serial, os
+import time, serial, os, sys
 import traceback
 import ctypes
 import argparse
@@ -61,23 +61,11 @@ def SetSamBA(DueSerialPort):
                         parity=serial.PARITY_NONE,\
                         stopbits=serial.STOPBITS_ONE,\
                         bytesize=serial.EIGHTBITS,\
-                        timeout=2000)
-    
-    print str(ser.isOpen())            
+                        timeout=2000)       
     
     ser.write("\n")
     time.sleep(3)
     ser.close() 
-    print str(ser.isOpen())
-    """
-    cmd = "minicom -b 1200 -o -D " + DueSerialPort
-    print cmd
-    pro = subprocess.Popen(cmd, shell=True, preexec_fn=os.setsid) 
-    #pro = subprocess.Popen(cmd, preexec_fn=os.setsid)
-
-    time.sleep(3)
-    os.killpg(pro.pid, signal.SIGTERM)  # Send the signal to all the process groups
-    """
     
     log.Log("SAM-BA Set.")                                                                    
 
@@ -240,9 +228,9 @@ def ArduinoFlashLoad(SketchFile, DueSerialPort, IsNativePort):
 def Checks(Port, SketchFile):
     """ Does basic checks that sketch file exists and port is connected."""
     if not os.path.isfile(SketchFile):
-        raise Exception("Sketch File Does Not Exist: " + SketchFile)
+        log.Log("Sketch File Does Not Exist: " + SketchFile)
+        sys.exit()
     
-    """
     try:
         ser = serial.Serial(port=Port,\
             baudrate=1200,\
@@ -251,19 +239,20 @@ def Checks(Port, SketchFile):
             bytesize=serial.EIGHTBITS,\
             timeout=2000)
         
-        
+    except serial.SerialException:
+        log.Log("Problem with selected Port. Double check it is correct.")
+        sys.exit()
     except Exception:
-        raise Exception("Error with Serial Port. " + traceback.format_exc())
-    """
+        raise Exception("Unexpected excetion in Checks(): " + traceback.format_exc())
 
-def Test(sketchFile, port, logFile=False, sockJs=False):    
+def Upload(sketchFile, port, logFile=False, sockJs=False):    
     try:  
         global log
               
         if not logFile:
             log = Logger.Logger(False)                                                              # Doesn't save to Log, just prints.
         else:
-            log = Logger.Logger(True, logFile, True, sockJs)                                                # Saves to Log file.
+            log = Logger.Logger(True, logFile, True, sockJs)                                            # Saves to Log file.
         
         log.Log("Starting ArduinoFlashLog.py")
         log.Log(sketchFile)
@@ -274,29 +263,30 @@ def Test(sketchFile, port, logFile=False, sockJs=False):
         portDetail = []
         GetPortInfo(port, portDetail)                                                               # Gets the details for the specified port.
         
-        print str(portDetail)
-        print portDetail[0][1]
+        #log.Log(str(portDetail))
+        #log.Log(portDetail[0][1])
         
-        if portDetail[0][1] == "Due-SAMBA Mode":                   # Checks if port is already in SAM-BA mode. If it is then Flash file.
-            print "Already in SAM-BA Mode."
+        if len(portDetail) < 1:
+            log.Log("Port not connected to a supported device.")            
+        elif portDetail[0][1] == "Due-SAMBA Mode":                   # Checks if port is already in SAM-BA mode. If it is then Flash file.
+            log.Log("Already in SAM-BA Mode.")
             ArduinoFlashLoad(sketchFile, port, ArduinoFlashHardValues.isNativePort)
         elif portDetail[0][1] == "Due":                                                             # Checks if port is in Due mode. If so then set to SAM-BA then Flash file.
-            print "Setting into SAM-BA Mode."
+            log.Log("Setting into SAM-BA Mode.")
             SetSamBA(port)                                                                          # Sets processor into SAM-BA mode.
             time.sleep(2)
             portList = GetConnectedDeviceList()                                                     # Gets list of all connected serials.
             
-            for port in portList:                                                                  # Check each port for a connect SAM-BA mode.
+            for port in portList:                                                                  # Check each port for a connect SAM-BA mode and assume it is correct one.
+                log.Log("Port: " + str(port))
+                log.Log(str(port[1]))
                 
-                print "Port: " + str(port)
-                print str(port[1])
                 if port[1] == "Due-SAMBA Mode":
-                    print "New port: " + port[0]
-                    
+                    log.Log("New port: " + port[0])
                     ArduinoFlashLoad(sketchFile, port[0], ArduinoFlashHardValues.isNativePort)
                     break
         else:
-            print "Not a supported device."
+            log.Log("Not a supported device.")
         
         if ser:
             ser.close()
@@ -312,7 +302,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Upload Arduino Sketch to Arduino Due via Pi.')
     
     parser.add_argument("-f", "--file", dest="sketchFile", required=True, help="Sketch file to upload. Including path.")
-    parser.add_argument("-p", "--port", dest="port", required=True, help="Port Due is connected on.")
+    parser.add_argument("-p", "--port", dest="port", default=False, help="Port Due is connected on. Leave blank for auto selection.")
     parser.add_argument("-l", "--log", dest="logFile", default=False, help="Save output to log file.")
     
     args = parser.parse_args()
@@ -322,7 +312,23 @@ if __name__ == "__main__":
     logFile = args.logFile
     
     try:
-        Test(sketchFile, port, logFile)
+        if not port:
+            print "Attempting to find first connected Device."
+            portList = GetConnectedDeviceList()                                                     # Gets list of all connected serials.
+            for portDevice in portList:                                                                  # Check each port for a connect SAM-BA mode and assume it is correct one.                
+                if portDevice[1] == "Due-SAMBA Mode":
+                    port = portDevice[0]
+                    break
+                elif portDevice[1] == "Due":
+                    port = portDevice[0]
+                    break
+            
+        if not port:  
+            print "Couldn't find a connected Device to upload to."
+            sys.exit()
+        
+        print "Uploading to Port: " + port
+        Upload(sketchFile, port, logFile)
     except Exception, e:
         print "Main Exception:"
         print traceback.format_exc()
