@@ -12,13 +12,15 @@ Sketch file must be saved locally on PI and be of type ".cpp.bin".
 usage: piupdue.py [-h] -f SKETCHFILE [-p PORT] [-l LOGFILE]
 
 optional arguments:
-  -h, --help            show this help message and exit
-  -f SKETCHFILE, --file SKETCHFILE
-                        Sketch file to upload. Including path. (/path/File.cpp.bin)
-  -p PORT, --port PORT  Port Due is connected on. Leave blank for auto
-                        selection.
-  -l LOGFILE, --log LOGFILE
-                        Save output to log file.
+
+-h, --help            				show this help message and exit
+
+-f SKETCHFILE, --file SKETCHFILE 	Sketch file to upload. Including path. (/path/File.cpp.bin)
+
+-p PORT, --port PORT  				Port Due is connected on. Leave blank for auto selection.
+
+-l LOGFILE, --log LOGFILE			Save output to log file.
+
 # Use in Python Program
 
 Use the Upload function found in piupdue.py, Ex:
