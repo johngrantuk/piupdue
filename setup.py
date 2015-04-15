@@ -7,7 +7,7 @@ def readme():
 
 setup(
     name='piupdue',
-    version='1.0.0',
+    version='1.0.1',
 	description='Upload code to Arduino Due from Python.',
     url='https://github.com/johngrantuk/piupdue',
 	author='John Grant',
