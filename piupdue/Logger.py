@@ -15,7 +15,7 @@ class Logger:
             self.filePath = FilePath
             self.display = Display
             self.sockJs = SockJs
-            self.my_logger = logging.getLogger('ArduinoFlashLogger')
+            self.my_logger = logging.getLogger(FilePath)
             self.my_logger.setLevel(logging.DEBUG)
            
             handler = logging.handlers.RotatingFileHandler(FilePath, maxBytes='2000000', backupCount=5)       # Add the log message handler to the logger

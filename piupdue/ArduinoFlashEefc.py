@@ -156,7 +156,7 @@ def WaitFSR(SerialPort, Log):
                 Log.Log("Breaking.")
                 break
             
-            time.sleep(1)
+            time.sleep(1)                                                       ##########???????
         else:
             break
         
