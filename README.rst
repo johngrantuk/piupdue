@@ -7,7 +7,7 @@ an Arduino Due from a RaspberryPI (connected by USB).
 Based on the `Arduino BOSSA C++ source
 code. <https://github.com/shumatech/BOSSA/tree/arduino/src>`__
 
-Install using: $ pip install pyupdue
+Install using: $ pip install piupdue
 
 Sketch file must be saved locally on PI and be of type ".cpp.bin".
 
