@@ -3,7 +3,7 @@ Python package that enables a compiled Ardunio Sketch to be uploaded to an Ardui
 
 Based on the [Arduino BOSSA C++ source code.](https://github.com/shumatech/BOSSA/tree/arduino/src)
 
-Install using: $ pip install pyupdue
+Install using: $ pip install piupdue
 
 Sketch file must be saved locally on PI and be of type ".cpp.bin".
 
